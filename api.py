@@ -7,6 +7,7 @@ import math
 import sys
 import clips as clippy
 from datetime import datetime, timezone
+import database as db
 load_dotenv()  # take environment variables from .env.
 
 # Initialize appToken with regenerateToken function
@@ -29,7 +30,7 @@ def getClips(name, dataOnly = False):
                                  "first": 100,
                              })
     
-    if dataOnly == True:
+    if dataOnly:
         return response.json()
     data = response.json()["data"]
     clips = []
@@ -40,20 +41,24 @@ def getClips(name, dataOnly = False):
 
 def getStreamerID(name):
     global appToken
+    chache = db.getIDCache(name)
+    if chache is not None:
+        return chache
+    else:
+        checkToken()
+        response = requests.get(f"https://api.twitch.tv/helix/users?login={name}",
+                                headers={
+                                    "Authorization": f"Bearer {appToken}",
+                                    "Client-Id": f"{os.getenv('TWITCH_APPID')}"
+                                })
 
-    checkToken()
-    response = requests.get(f"https://api.twitch.tv/helix/users?login={name}",
-                            headers={
-                                "Authorization": f"Bearer {appToken}",
-                                "Client-Id": f"{os.getenv('TWITCH_APPID')}"
-                            })
-    
-    try:
-        return response.json()["data"][0]["id"]
-    except:
-        #print(name, file=sys.stderr)
-        print("Error while getting streamer id" + json.dumps(response.json()), file=sys.stderr)
-        return json.dumps(response.json())
+        try:
+            db.addStreamer(name, response.json()["data"][0]["id"])
+            return response.json()["data"][0]["id"]
+        except:
+            #print(name, file=sys.stderr)
+            print("Error while getting streamer id" + json.dumps(response.json()), file=sys.stderr)
+            return json.dumps(response.json())
 
 
 def regenerateToken():
@@ -89,4 +94,5 @@ def getTime():
     rfc3339_time = current_time_utc.replace(tzinfo=None).isoformat() + timezone_str
 
     return rfc3339_time
+
 
