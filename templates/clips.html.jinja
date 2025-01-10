@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>View the latest Clip of a Streamer</title>
+
+  <link type="text/css" rel="stylesheet" href="/static/normalize.css" />
+  <link rel="stylesheet" type="text/css" href="/static/style.css" />
+ 
+
+</head>
+
+<body>
+  <h1>Showing {{clips |length}} Clips by {{streamer}}</h1>
+  <div id="clip-container">
+  {% for clip in clips %}
+  <div class="clip" onclick='toggleIframe(this)' style='cursor: pointer;'>
+    <h2>{{clip.title}}</h2>
+    <div class="content">
+      <img src="{{clip.thumbnail_url}}" data-embedurl='{{clip.embed_url}}'>
+    </div>
+    <span class='clip-description'>
+      <p>{{clip.created_at}}</p>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  function toggleIframe(clicked) {
+    var content = clicked.querySelector('.content');
+    var img = content.querySelector('img');
+    var embedUrl = img.dataset.embedurl;
+
+    // Check if iframe already exists
+    var iframe = content.querySelector('iframe');
+    if (!iframe) {
+      // If iframe doesn't exist, create and append it
+      iframe = document.createElement('iframe');
+      iframe.setAttribute('src', embedUrl);
+      iframe.setAttribute('height', '272');
+      iframe.setAttribute('width', '480');
+      iframe.setAttribute('frameborder', '0');
+      content.appendChild(iframe);
+    }
+
+    // Toggle visibility
+    if (img.style.display === 'none') {
+      img.style.display = 'block';
+      iframe.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      iframe.style.display = 'block';
+    }
+  }
+</script>
+
+</body>
+
+</html>
